@@ -1,0 +1,32 @@
+
+const express = require("express");
+const { createCustomer, deleteCustomer, findOneCustomer, findMultipleCustomer, findCustomersByItemStatus,updateCustomer,
+    updateCustomerItems, updateAndMoveDeliveredItems, revertQuantityToCustomer
+     } = require("../controllers/customerController")
+
+
+
+const { isLoggedIn, customRole } = require("../middlewares/UserMiddleware");
+
+const router = express.Router();
+
+console.log("customer Router");
+
+
+router.route("/addCustomer").post(isLoggedIn, customRole('manager', 'master', 'admin'), createCustomer);
+
+router.route("/updateCustomer/:orderNumber").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateCustomer);
+router.route("/updateCustomerItems/:orderNumber").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateCustomerItems);
+router.route("/updateAndMoveDeliveredItems").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateAndMoveDeliveredItems);
+router.route("/revertQuantityToCustomer").put(isLoggedIn, customRole('manager', 'master', 'admin'), revertQuantityToCustomer);
+
+router.route("/deleteCustomer/:orderNumber").delete(isLoggedIn, customRole('manager', 'master', 'admin'), deleteCustomer);
+
+
+router.route("/findOneCustomer/:orderNumber").get(isLoggedIn, findOneCustomer);
+router.route("/findMultipleCustomer").get(isLoggedIn, findMultipleCustomer);
+router.route("/findCustomersByItemStatus").get(isLoggedIn, findCustomersByItemStatus);
+
+
+
+module.exports = router;
