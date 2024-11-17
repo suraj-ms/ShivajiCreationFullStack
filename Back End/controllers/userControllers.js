@@ -16,7 +16,7 @@ exports.signup = BigPromise(async (req, res, next) => {
 
     const existingUser = await User.findOne({ userName });
     if (existingUser) {
-        return next(new CustomError("Username already exists", 400));
+        return res.status(400).json({ success: false, message: 'Username already exists' });
     }
 
     const user = await User.create({
