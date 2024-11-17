@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.route("/signup").post(signup);
 router.route("/login").post(login);
-router.route("/logout").get(logout);
+router.route("/logout").post(logout);
 router.route("/admin/forgotPassword").post(isLoggedIn, customRole("admin"), forgotPassword);
 router.route("/updateUserDetails").post(isLoggedIn, customRole("admin"), updateUserDetails);
 router.route("/admin/adminAllUser").get(isLoggedIn, customRole("admin"), adminAllUser);
