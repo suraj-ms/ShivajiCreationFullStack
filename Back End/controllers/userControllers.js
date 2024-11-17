@@ -6,7 +6,6 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 
 exports.signup = BigPromise(async (req, res, next) => {
-    console.log(req.body);
 
     const { userName, password } = req.body;
 
