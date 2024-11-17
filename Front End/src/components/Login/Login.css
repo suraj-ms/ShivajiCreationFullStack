@@ -1,0 +1,73 @@
+/* Add this in Login.css and import it into your Login component */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f7fc;
+  }
+  
+  .login-form {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 25%;
+  }
+  
+  .login-form h2 {
+    text-align: center;
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  
+  .login-form div {
+    margin-bottom: 20px;
+  }
+  
+  .login-form label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    display: block;
+    margin-bottom: 8px;
+  }
+  
+  .login-form input {
+    width: 90%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: border 0.3s;
+  }
+  
+  .login-form input:focus {
+    border-color: #4CAF50;
+  }
+  
+  .login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .login-form button:hover {
+    background-color: #45a049;
+  }
+  
+  .error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+  }
+  
