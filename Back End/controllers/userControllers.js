@@ -1,8 +1,6 @@
 const BigPromise = require("../middlewares/bigPromise");
-const CustomError = require("../utils/CustomError ");
 const cookieToken = require("../utils/cookieToken");
 const User = require("../model/user")
-const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 
 exports.signup = BigPromise(async (req, res, next) => {
@@ -11,12 +9,12 @@ exports.signup = BigPromise(async (req, res, next) => {
 
     if (!userName || !password) {
         const missingField = !userName ? "User Name" : "Password";
-        return next(new CustomError(`${missingField} is required`, 400));
+        return res.status(400).json({ success: false, message: `${missingField} is required` });
     }
 
     const existingUser = await User.findOne({ userName });
     if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Username already exists' });
+        return res.status(409).json({ success: false, message: 'Username already exists' });
     }
 
     const user = await User.create({
@@ -32,7 +30,7 @@ exports.login = BigPromise(async (req, res, next) => {
 
     // check for presence of email and password
     if (!userName || !password) {
-        return next(new CustomError("please provide User Name and password", 400));
+        return res.status(400).json({ success: false, message:  `please provide User Name and password` });
     }
 
     // get user from DB
@@ -41,7 +39,7 @@ exports.login = BigPromise(async (req, res, next) => {
     // if user not found in DB
     // In the backend (userControllers.js or similar)
     if (!user) {
-        return res.status(400).json({ success: false, message: 'Username or password does not match or exist' });
+        return res.status(401).json({ success: false, message: 'Username or password does not match or exist' });
     }
 
     // match the password
@@ -49,9 +47,7 @@ exports.login = BigPromise(async (req, res, next) => {
 
     //if password do not match
     if (!isPasswordCorrect) {
-        return next(
-            new CustomError("Username or password does not match or exist", 400)
-        );
+        return res.status(401).json({ success: false, message:  `password does not match or exist` });
     }
 
     // if all goes good and we send the token
@@ -78,13 +74,13 @@ exports.forgotPassword = BigPromise(async (req, res, next) => {
 
     // Check if newPassword is provided
     if (!newPassword) {
-        return next(new CustomError("Please provide a new password", 400));
+        return res.status(400).json({ success: false, message:  `Please provide a new password` });
     }
 
     const user = await User.findOne({ userName });
 
     if (!user) {
-        return next(new CustomError("userName not found as registered", 400));
+        return res.status(404).json({ success: false, message:  `userName not found as registered` });
     }
 
     if (secretKey === process.env.FORGOT_PASSWORD_SECRET_KEY) {
@@ -97,9 +93,7 @@ exports.forgotPassword = BigPromise(async (req, res, next) => {
         });
 
     } else {
-        return next(
-            new CustomError("secretKey does not match or exist", 400)
-        );
+        return res.status(401).json({ success: false, message:  `secretKey does not match or exist` });
     }
 });
 
@@ -107,14 +101,16 @@ exports.updateUserDetails = BigPromise(async (req, res, next) => {
     const { userName, password } = req.body;
 
     if (!userName || !password) {
-        return next(new CustomError("Please provide both username and password", 400));
+        return res.status(400).json({ success: false, message:  `Please provide both username and password` });
+
     }
 
     // Find the user
     const user = await User.findOne({ userName });
 
     if (!user) {
-        return next(new CustomError("User not found", 404));
+        return res.status(404).json({ success: false, message:  `User not found` });
+
     }
 
     // Update the user fields
@@ -146,7 +142,8 @@ exports.admingetOneUser = BigPromise(async (req, res, next) => {
     const user = await User.findOne({ userName: req.params.userName });
 
     if (!user) {
-        return next(new CustomError("No user found", 400));
+        return res.status(404).json({ success: false, message:  `No user found` });
+
     }
 
     // send user data
@@ -161,7 +158,7 @@ exports.adminUpdateOneUserDetails = BigPromise(async (req, res, next) => {
     const { userName, password, role } = req.body;
 
     if (!userName) {
-        return res.status(400).json({
+        return res.status(401).json({
             success: false,
             message: "Please provide userName, email, and name."
         });
@@ -206,7 +203,8 @@ exports.adminDeleteOneUser = BigPromise(async (req, res, next) => {
     const user = await User.findById(userId);
 
     if (!user) {
-        return next(new CustomError("No such user found", 401));
+        return res.status(404).json({ success: false, message:  `User not found` });
+
     }
 
     // remove user from database

@@ -2,7 +2,6 @@ const BigPromise = require('../middlewares/bigPromise');
 const Customer = require('../model/CustomerModel');
 const Item = require('../model/Item');
 const ItemPrice = require('../model/Item&Price');
-const CustomError = require('../utils/CustomError ');
 const OldCustomerOrder = require('../model/oldCustomerOrder');
 const DeletedCustomer = require('../model/DeletedCustomerModel');
 const DeletedCustomerItem = require('../model/DeletedCustomerItemsModel');
@@ -16,11 +15,11 @@ exports.createCustomer = BigPromise(async (req, res, next) => {
 
     const existingCustomer = await Customer.findById(orderNumber);
     if (existingCustomer) {
-        return next(new CustomError(`Order number "${orderNumber}" already exists.`, 400));
+        return res.status(409).json({ success: false, message: `Order number "${orderNumber}" already exists.` });
     }
 
     if (!Array.isArray(items)) {
-        return next(new CustomError('Items must be an array.', 400));
+        return res.status(400).json({ success: false, message: `Items must be an array.` });
     }
 
     const newCustomer = new Customer({
@@ -32,7 +31,7 @@ exports.createCustomer = BigPromise(async (req, res, next) => {
     const orderedItems = await Promise.all(items.map(async (item) => {
         const itemPrice = await ItemPrice.findOne({ itemName: item.itemName });
         if (!itemPrice) {
-            return next(new CustomError(`Item "${item.itemName}" not found in ItemPrice collection.`, 404));
+            return res.status(404).json({ success: false, message: `Item "${item.itemName}" not found in ItemPrice collection` });
         }
 
         const newItem = new Item({
@@ -74,7 +73,7 @@ exports.deleteCustomer = BigPromise(async (req, res, next) => {
     const customer = await Customer.findById(orderNumber);
 
     if (!customer) {
-        return next(new CustomError(`No customer found with order number: ${orderNumber}`, 404));
+        return res.status(404).json({ success: false, message: `No customer found with order number: ${orderNumber}` });
     }
 
     const deletedCustomerData = {
@@ -115,7 +114,7 @@ exports.deleteCustomer = BigPromise(async (req, res, next) => {
     const deleteCustomerResult = await Customer.deleteOne({ _id: orderNumber });
 
     if (deleteCustomerResult.deletedCount === 0) {
-        return next(new CustomError(`Failed to delete customer with order number: ${orderNumber}`, 500));
+        return res.status(500).json({ success: false, message: `Failed to delete customer with order number:` });
     }
 
     // Respond with success message
@@ -135,7 +134,7 @@ exports.findOneCustomer = BigPromise(async (req, res, next) => {
     const customer = await Customer.findById(orderNumber).populate('itemsOrdered');
 
     if (!customer) {
-        return next(new CustomError(`No customer found with order number: ${orderNumber}`, 404));
+        return res.status(404).json({ success: false, message: `No customer found with order number: ${orderNumber}` });
     }
 
     return res.status(200).json({
@@ -150,7 +149,7 @@ exports.findMultipleCustomer = BigPromise(async (req, res, next) => {
     const { orderNumbers } = req.body;
 
     if (!Array.isArray(orderNumbers) || orderNumbers.length === 0) {
-        return next(new CustomError(`Invalid input: orderNumbers should be a non-empty array.`, 400));
+        return res.status(400).json({ success: false, message: `Invalid input: orderNumbers should be a non-empty array` });
     }
 
     const customers = await Customer.find({ _id: { $in: orderNumbers } })
@@ -160,7 +159,7 @@ exports.findMultipleCustomer = BigPromise(async (req, res, next) => {
         });
 
     if (customers.length === 0) {
-        return next(new CustomError(`No customers found for the provided order numbers.`, 404));
+        return res.status(404).json({ success: false, message: `No customers found for the provided order numbers.` });
     }
 
     const foundOrderNumbers = new Set(customers.map(customer => customer._id.toString()));
