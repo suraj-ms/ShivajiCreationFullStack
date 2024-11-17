@@ -39,10 +39,9 @@ exports.login = BigPromise(async (req, res, next) => {
     const user = await User.findOne({ userName }).select("+password");
 
     // if user not found in DB
+    // In the backend (userControllers.js or similar)
     if (!user) {
-        return next(
-            new CustomError("User Name or password does not match or exist", 400)
-        );
+        return res.status(400).json({ success: false, message: 'Username or password does not match or exist' });
     }
 
     // match the password
@@ -203,18 +202,17 @@ exports.adminUpdateOneUserDetails = BigPromise(async (req, res, next) => {
 exports.adminDeleteOneUser = BigPromise(async (req, res, next) => {
 
     const { userId } = req.params;
-    
+
     const user = await User.findById(userId);
 
     if (!user) {
-      return next(new CustomError("No such user found", 401));
+        return next(new CustomError("No such user found", 401));
     }
-   
+
     // remove user from database
     await User.deleteOne({ _id: userId });
-  
+
     res.status(200).json({
-      success: true,
+        success: true,
     });
-  });
-  
+});
