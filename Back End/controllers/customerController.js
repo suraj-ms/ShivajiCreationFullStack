@@ -7,6 +7,8 @@ const OldCustomerOrder = require('../model/oldCustomerOrder');
 const DeletedCustomer = require('../model/DeletedCustomerModel');
 const DeletedCustomerItem = require('../model/DeletedCustomerItemsModel');
 
+const mongoose = require('mongoose');
+
 
 
 exports.createCustomer = BigPromise(async (req, res, next) => {
@@ -61,40 +63,6 @@ exports.createCustomer = BigPromise(async (req, res, next) => {
         },
     });
 });
-
-// with out 1 month span 
-// exports.deleteCustomer = BigPromise(async (req, res, next) => {
-//     const { orderNumber } = req.params;
-
-//     console.log(`orderNumber: ${orderNumber}`);
-
-//     const customer = await Customer.findById(orderNumber);
-
-//     if (!customer) {
-//         return next(new CustomError(`No customer found with order number: ${orderNumber}`, 404));
-//     }
-
-//     const deleteItemsResult = await Item.deleteMany({ customer: customer._id });
-//     if (deleteItemsResult.deletedCount === 0) {
-//         console.log(`No items found for customer with order number: ${orderNumber}`);
-//     }
-
-//     await OldCustomerOrder.deleteMany({ customer: customer._id });
-
-//     const deleteCustomerResult = await Customer.deleteOne({ _id: orderNumber });
-
-//     if (deleteCustomerResult.deletedCount === 0) {
-//         return next(new CustomError(`Failed to delete customer with order number: ${orderNumber}`, 500));
-//     }
-
-//     res.status(200).json({
-//         success: true,
-//         message: `Customer with order number ${orderNumber} and their items have been deleted.`,
-//         deletedCustomer: customer,
-//     });
-// });
-
-
 
 // with 1 month span
 exports.deleteCustomer = BigPromise(async (req, res, next) => {
@@ -271,229 +239,325 @@ exports.updateCustomer = async (req, res) => {
 };
 
 exports.updateCustomerItems = async (req, res) => {
-    const { orderNumber } = req.params;
-    const { itemsOrdered } = req.body;
+    try {
+        const { orderNumber } = req.params;
+        const { updateData } = req.body;
+
+        if (!orderNumber) {
+            return res.status(400).json({ message: 'Order number is required' });
+        }
+
+        if (!updateData) {
+            return res.status(400).json({ message: 'Update data is required' });
+        }
+
+        const items = await Item.find({ customer: orderNumber });
+
+        if (items.length === 0) {
+            return res.status(404).json({ message: 'No items found for this order number' });
+        }
+
+        const updatedItems = await Item.updateMany(
+            { customer: orderNumber },
+            { $set: updateData },
+            { new: true }
+        );
+
+        res.status(200).json(updatedItems);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'An error occurred while updating the items', error: err.message });
+    }
+
+};
+
+
+
+exports.updateAndMoveDeliveredItems = async (req, res) => {
+    const { items } = req.body;
+    const session = await mongoose.startSession();
+  
+    try {
+      session.startTransaction();
+  
+      for (const itemData of items) {
+        const { itemId, customerId, quantity } = itemData;
+  
+        const item = await Item.findById(itemId).session(session);
+        if (!item) {
+          throw new Error(`Item with id ${itemId} not found`);
+        }
+  
+        if (item.quantity < quantity) {
+          throw new Error(`Not enough quantity of item ${itemId} to deliver`);
+        }
+  
+        item.quantity -= quantity;
+        await item.save({ session });
+  
+        let oldOrder = await OldCustomerOrder.findOne({
+          item: item._id,
+          customer: customerId,
+        }).session(session);
+  
+        if (oldOrder) {
+          oldOrder.quantity += quantity;
+          await oldOrder.save({ session });
+        } else {
+          // When creating a new order, include the itemName
+          const oldCustomerOrder = new OldCustomerOrder({
+            item: item._id,
+            itemName: item.itemName,  // Send item name here
+            customer: customerId,
+            quantity,
+            status: 'delivered',
+          });
+          await oldCustomerOrder.save({ session });
+        }
+  
+        if (item.quantity === 0) {
+          await item.deleteOne({ session });
+        }
+      }
+  
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.status(200).json({
+        message: 'Items updated, old orders recorded, and items deleted successfully',
+      });
+  
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error(err);
+      res.status(500).json({ message: 'An error occurred while processing the request', error: err.message });
+    }
+  };
+  
+
+
+
+
+  exports.revertQuantityToCustomer = async (req, res) => {
+    const { items } = req.body;
+    const session = await mongoose.startSession();
 
     try {
-        const customer = await Customer.findById(orderNumber);
+        session.startTransaction();
+
+        for (const itemData of items) {
+            const { itemId, customerId, quantityToRevert } = itemData;
+
+            const oldOrder = await OldCustomerOrder.findOne({
+                item: itemId,
+                customer: customerId
+            }).session(session);
+
+            if (!oldOrder) {
+                throw new Error(`No order found for item ${itemId} and customer ${customerId}`);
+            }
+
+            if (oldOrder.quantity < quantityToRevert) {
+                throw new Error(`Cannot revert more quantity than was ordered. Available: ${oldOrder.quantity}`);
+            }
+
+            let item = await Item.findById(itemId).session(session);
+
+            if (item) {
+                item.quantity += quantityToRevert;
+                item.status = 'new';
+                await item.save({ session });
+            } else {
+                if (!oldOrder.itemName) {
+                    throw new Error('Item name is missing in OldCustomerOrder');
+                }
+
+                item = new Item({
+                    _id: itemId,
+                    itemName: oldOrder.itemName,
+                    quantity: quantityToRevert,
+                    status: 'new',
+                });
+                await item.save({ session });
+            }
+
+            oldOrder.quantity -= quantityToRevert;
+
+            if (oldOrder.quantity === 0) {
+                await oldOrder.deleteOne({ session });
+            } else {
+                await oldOrder.save({ session });
+            }
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).json({
+            message: 'Items reverted and updated successfully',
+        });
+
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(err);
+        res.status(500).json({ message: 'An error occurred while processing the request', error: err.message });
+    }
+};
+
+
+
+exports.findCustomerById = async (req, res) => {
+    try {
+        const customerId = req.params.id;
+
+
+
+        // Find the customer by their _id
+        const customer = await Customer.findById(customerId).populate('itemsOrdered'); // Assuming you want to populate itemsOrdered
+
         if (!customer) {
             return res.status(404).json({ message: 'Customer not found' });
         }
 
-        if (itemsOrdered && Array.isArray(itemsOrdered)) {
-            const updatedItems = [];
+        return res.status(200).json(customer);
+    } catch (error) {
+        console.error('Error fetching customer:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
 
-            for (let itemData of itemsOrdered) {
-                if (itemData._id) {
-                    const item = await Item.findById(itemData._id);
-                    if (!item) {
-                        return res.status(404).json({ message: 'Item not found' });
-                    }
 
-                    if (item.customer && item.customer.toString() !== orderNumber) {
-                        return res.status(400).json({ message: 'Item does not belong to this customer' });
-                    }
+exports.searchCustomers = async (req, res) => {
+    try {
+        const searchQuery = req.query.query || ''; // Default to empty string if no query is provided
+        const page = parseInt(req.query.page) || 1; // Default to page 1 if no page is specified
+        const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if no limit is specified
 
-                    item.itemName = itemData.itemName || item.itemName;
-                    item.quantity = itemData.quantity || item.quantity;
-                    item.status = itemData.status || item.status;
-                    item.dueDate = itemData.dueDate || item.dueDate;
+        // Calculate skip and limit values for pagination
+        const skip = (page - 1) * limit;
 
-                    const updatedItem = await item.save();
-                    updatedItems.push(updatedItem);
-                } else {
-                    const newItem = new Item({
-                        ...itemData,
-                        customer: orderNumber,
-                    });
+        // Search query to find customers
+        const customers = await Customer.find({
+            $or: [
+                { customerName: { $regex: searchQuery, $options: 'i' } },         // Case-insensitive search on customerName
+                { phoneNumber: { $regex: searchQuery, $options: 'i' } },           // Case-insensitive search on phoneNumber
+                { 'itemsOrdered.itemName': { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search on item names
+                { _id: { $regex: searchQuery, $options: 'i' } }  // Convert _id to string for partial match
+            ]
+        })
+            .skip(skip)  // Skip the number of documents based on pagination
+            .limit(limit)  // Limit the number of documents per page
+            .populate('itemsOrdered');  // Populate itemsOrdered if necessary
 
-                    const savedNewItem = await newItem.save();
-                    updatedItems.push(savedNewItem);
-                }
-            }
+        // Get total count of customers matching the search query (for pagination)
+        const totalCount = await Customer.countDocuments({
+            $or: [
+                { customerName: { $regex: searchQuery, $options: 'i' } },
+                { phoneNumber: { $regex: searchQuery, $options: 'i' } },
+                { 'itemsOrdered.itemName': { $regex: searchQuery, $options: 'i' } },
+                { _id: { $regex: searchQuery, $options: 'i' } }
+            ]
+        });
 
-            customer.itemsOrdered = updatedItems;
-            const updatedCustomer = await customer.save();
+        const totalPages = Math.ceil(totalCount / limit); // Calculate total pages
 
-            res.status(200).json(updatedCustomer);
-        } else {
-            return res.status(400).json({ message: 'Invalid itemsOrdered data' });
+        return res.status(200).json({
+            customers,
+            totalPages,
+            currentPage: page,
+            totalCount
+        });
+    } catch (error) {
+        console.error('Error searching customers:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.addItemsToCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const itemsData = req.body;
+
+        if (!Array.isArray(itemsData) || itemsData.length === 0) {
+            return res.status(400).json({ message: 'You must provide an array of items' });
         }
+
+        const customer = await Customer.findById(customerId);
+
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
+        const existingItems = await Item.find({
+            customer: customerId,
+            itemName: { $in: itemsData.map(item => item.itemName) }
+        });
+
+        if (existingItems.length > 0) {
+            const existingItemNames = existingItems.map(item => item.itemName);
+            return res.status(400).json({
+                message: 'Some items already exist for this customer',
+                existingItems: existingItemNames
+            });
+        }
+
+        const newItems = itemsData.map(item => ({
+            itemName: item.itemName,
+            quantity: item.quantity,
+            status: item.status || 'new',
+            trialDate: item.trialDate,
+            dueDate: item.dueDate,
+            customer: customerId,
+        }));
+
+        const createdItems = await Item.insertMany(newItems);
+
+        await Customer.findByIdAndUpdate(
+            customerId,
+            { $push: { itemsOrdered: { $each: createdItems.map(item => item._id) } } },
+            { new: true }
+        );
+
+        res.status(201).json(createdItems);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'An error occurred while adding the items', error: err.message });
     }
 
 };
 
 
-// exports.updateAndMoveDeliveredItems = async (req, res) => {
-//     try {
-//         const { itemsOrdered } = req.body;
-
-//         for (const itemTransfer of itemsOrdered) {
-//             const { _id, quantity, status } = itemTransfer;
-
-//             const item = await Item.findById(_id);
-//             if (!item) {
-//                 return res.status(404).json({ message: `Item with ID ${_id} not found` });
-//             }
-
-//             if (status === 'delivered' && quantity > 0 && item.quantity >= quantity) {
-//                 console.log("Processing item with status 'delivered'");
-
-//                 const oldOrder = new OldCustomerOrder({
-//                     itemId: item._id,
-//                     itemName: item.itemName,
-//                     quantity,
-//                     status,
-//                     dueDate: item.dueDate,
-//                 });
-//                 await oldOrder.save();
-
-//                 item.quantity -= quantity;
-//                 await item.save();
-//                 return res.status(200).json({ message: "Transfer successful" });
-//             } else if (status === 'inProgress') {
-//                 console.log("Item with status 'inProgress' - updating item status");
-
-//                 // Handle the 'inProgress' item
-//                 // For example, you might want to update its status or log something
-
-//                 // If you want to process it the same way as 'delivered', or make any change:
-//                 item.status = 'inProgress';  // Or any other update you need
-//                 item.quantity -= quantity;  // Update quantity if necessary
-//                 await item.save();
-
-//                 return res.status(200).json({ message: "Item status updated to inProgress" });
-//             } else {
-//                 console.log("Item cannot be processed");
-
-//                 return res.status(400).json({
-//                     message: `Cannot transfer quantity of item with ID ${_id}: Check status or quantity.`,
-//                     currentStatus: item.status,
-//                     availableQuantity: item.quantity,
-//                     requestedQuantity: quantity
-//                 });
-//             }
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: "Server error", error });
-//     }
-// };
-
-
-exports.updateAndMoveDeliveredItems = async (req, res) => {
+exports.deleteItemFromCustomer = async (req, res) => {
     try {
-        const { itemsOrdered } = req.body;
+        const { customerId, itemId } = req.params;
 
-        for (const itemTransfer of itemsOrdered) {
-            const { _id, quantity, status } = itemTransfer;
-
-            if (status !== 'delivered') {
-                return res.status(400).json({
-                    message: "Item status must be 'delivered' to update.",
-                    currentStatus: status,
-                });
-            }
-
-            const item = await Item.findById(_id);
-            if (!item) {
-                return res.status(404).json({ message: `Item with ID ${_id} not found` });
-            }
-
-            if (quantity <= 0 || item.quantity < quantity) {
-                return res.status(400).json({
-                    message: `Insufficient stock for item with ID ${_id}`,
-                    currentQuantity: item.quantity,
-                    requestedQuantity: quantity,
-                });
-            }
-
-            item.status = 'delivered';
-            item.quantity -= quantity;
-            await item.save();
-
-            const oldOrder = new OldCustomerOrder({
-                itemId: item._id,
-                itemName: item.itemName,
-                quantity,
-                status: 'delivered',
-                dueDate: item.dueDate,
-            });
-            await oldOrder.save();
-
-            return res.status(200).json({
-                message: "Item status updated to 'delivered' and quantity adjusted.",
-                item: {
-                    itemId: item._id,
-                    newQuantity: item.quantity,
-                },
-            });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error", error });
-    }
-};
-
-
-exports.revertQuantityToCustomer = async (req, res) => {
-    try {
-        const { itemId, quantityToRevert } = req.body;
-
-        const [oldOrder, item] = await Promise.all([
-            OldCustomerOrder.findOne({ itemId }),
-            Item.findById(itemId)
-        ]);
-
-        if (!oldOrder) {
-            return res.status(404).json({ message: `Old order with item ID ${itemId} not found` });
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
         }
 
+        const item = await Item.findById(itemId);
         if (!item) {
-            return res.status(404).json({ message: `Item with ID ${itemId} not found` });
+            return res.status(404).json({ message: 'Item not found' });
         }
 
-        if (quantityToRevert <= 0) {
-            return res.status(400).json({ message: "Quantity to revert must be greater than 0." });
+        if (item.customer.toString() !== customerId) {
+            return res.status(400).json({ message: 'This item does not belong to the specified customer' });
         }
 
-        if (quantityToRevert > oldOrder.quantity) {
-            return res.status(400).json({
-                message: `Cannot revert quantity. Requested quantity exceeds available quantity in old order.`,
-                oldOrderQuantity: oldOrder.quantity,
-                requestedRevertQuantity: quantityToRevert
-            });
-        }
+        await Customer.findByIdAndUpdate(
+            customerId,
+            { $pull: { itemsOrdered: itemId } },
+            { new: true }
+        );
 
-        item.quantity += quantityToRevert;
-        await item.save();
+        await Item.findByIdAndDelete(itemId);
 
-        if (oldOrder.quantity === quantityToRevert) {
-            await oldOrder.deleteOne();
-            return res.status(200).json({
-                message: "Quantity successfully reverted and old order removed."
-            });
-        }
-
-        oldOrder.quantity -= quantityToRevert;
-        await oldOrder.save();
-
-        return res.status(200).json({ message: "Quantity successfully reverted to customer table." });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error", error });
+        res.status(200).json({ message: 'Item deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'An error occurred while deleting the item', error: err.message });
     }
 };
-
-
-
-
-
-
-
-
-// Shivaji_Creations

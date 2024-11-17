@@ -114,7 +114,7 @@ exports.getEmployeeWorkLogsByDateRange = async (req, res) => {
     // Adjusting the query to find work logs where the weekStart falls between start and end dates
     const workLogs = await EmployeeWork.find({
       employeeId: employeeId,
-      weekStart: {
+      startDate: {
         $gte: start.toISOString(),
         $lte: end.toISOString(),
       },

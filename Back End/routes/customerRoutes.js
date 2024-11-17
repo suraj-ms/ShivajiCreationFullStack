@@ -1,7 +1,8 @@
 
 const express = require("express");
 const { createCustomer, deleteCustomer, findOneCustomer, findMultipleCustomer, findCustomersByItemStatus,updateCustomer,
-    updateCustomerItems, updateAndMoveDeliveredItems, revertQuantityToCustomer
+    updateCustomerItems, updateAndMoveDeliveredItems, revertQuantityToCustomer, findCustomerById, searchCustomers, 
+    addItemsToCustomer, deleteItemFromCustomer
      } = require("../controllers/customerController")
 
 
@@ -14,6 +15,7 @@ console.log("customer Router");
 
 
 router.route("/addCustomer").post(isLoggedIn, customRole('manager', 'master', 'admin'), createCustomer);
+router.route("/addItemsToCustomer/:customerId").post(isLoggedIn, customRole('manager', 'master', 'admin'), addItemsToCustomer);
 
 router.route("/updateCustomer/:orderNumber").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateCustomer);
 router.route("/updateCustomerItems/:orderNumber").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateCustomerItems);
@@ -21,11 +23,14 @@ router.route("/updateAndMoveDeliveredItems").put(isLoggedIn, customRole('manager
 router.route("/revertQuantityToCustomer").put(isLoggedIn, customRole('manager', 'master', 'admin'), revertQuantityToCustomer);
 
 router.route("/deleteCustomer/:orderNumber").delete(isLoggedIn, customRole('manager', 'master', 'admin'), deleteCustomer);
+router.route("/deleteItemFromCustomer/:customerId/:itemId").delete(isLoggedIn, customRole('manager', 'master', 'admin'), deleteItemFromCustomer);
 
 
 router.route("/findOneCustomer/:orderNumber").get(isLoggedIn, findOneCustomer);
 router.route("/findMultipleCustomer").get(isLoggedIn, findMultipleCustomer);
 router.route("/findCustomersByItemStatus").get(isLoggedIn, findCustomersByItemStatus);
+router.route("/findCustomerById/:id").get(isLoggedIn, findCustomerById);
+router.route("/searchCustomers").get(isLoggedIn, searchCustomers);
 
 
 

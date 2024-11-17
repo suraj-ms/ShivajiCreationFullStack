@@ -71,14 +71,19 @@ exports.updateItemPrice = async (req, res) => {
 
 exports.deleteItem_and_PriceItem = async (req, res) => {
   try {
-    const { itemName } = req.params;
-    const result = await ItemPrice.findOneAndDelete({ itemName });
+    const { id } = req.params;
+    console.log(id);
+    
+    const result = await ItemPrice.findByIdAndDelete(id);
+
     if (!result) {
       return res.status(404).json({ message: 'Item not found' });
     }
+
     res.status(200).json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
