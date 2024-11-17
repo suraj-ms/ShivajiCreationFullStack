@@ -28,7 +28,6 @@ exports.signup = BigPromise(async (req, res, next) => {
 });
 
 exports.login = BigPromise(async (req, res, next) => {
-    console.log(req.body);
     const { userName, password } = req.body;
 
     // check for presence of email and password
