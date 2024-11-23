@@ -21,7 +21,7 @@ function Login() {
     setError('');  // Reset any previous error message
   
     try {
-      const response = await fetch(`https://shivajicreationfullstack.onrender.com/api/v1/login`, {
+      const response = await fetch(`${import.meta.env.VITE_APP_BACKEND_API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

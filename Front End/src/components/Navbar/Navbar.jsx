@@ -12,7 +12,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     
     try {
-      const response = await fetch(`https://shivajicreationfullstack.onrender.com/api/v1/logout`, {
+      const response = await fetch(`${import.meta.env.VITE_APP_BACKEND_API_URL}/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

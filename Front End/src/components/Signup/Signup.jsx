@@ -26,7 +26,7 @@ function SignUp() {
     const userData = { userName, email, password };
 
     try {
-      const response = await fetch(`https://shivajicreationfullstack.onrender.com/api/v1/signup`, {
+      const response = await fetch(`${import.meta.env.VITE_APP_BACKEND_API_URL}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
