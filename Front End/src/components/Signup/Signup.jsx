@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // React Router hook for navigation
-import './SignUp.css'; // Import the CSS file for SignUp
+import './Signup.css'; // Import the CSS file for SignUp
 import { Link } from 'react-router-dom';
 
 
