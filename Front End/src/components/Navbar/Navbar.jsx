@@ -1,59 +1,48 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
-import './Navbar.css'; // Import CSS for the navbar
-
+import './Navbar.css';
+import config from '../../utils/config ';
 
 const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
     
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate(); // Hook for navigation
-
-  const handleLogout = async () => {
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_APP_BACKEND_API_URL}/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.succes) {
-        
-        localStorage.removeItem('token');
-        
-        navigate('/login');
-      } else {
-
-        console.error(data.message || 'Logout failed');
-      }
-    } catch (error) {
-      console.error('An error occurred during logout', error);
-    }
+    navigate('/login');
   };
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setIsOpen(!isOpen);
   };
 
+  const navItems = [
+    { label: 'Employee', path: '/login' },
+    { label: 'Logout', path: '#', onClick: handleLogout, isButton: true },
+  ];
+
   return (
-    <nav className={`navbar ${isMenuOpen ? 'active' : ''}`}>
-      <div className="navbar-container">
-        <h1>My Application</h1>
-        <button className="menu-toggle" onClick={toggleMenu}>
-          ☰
-        </button>
-        <ul className={`nav-links ${isMenuOpen ? 'show' : ''}`}>
-          <li><Link to="/login">Login</Link></li>
-          <li><Link to="/home">Home</Link></li>
-          <li><button onClick={handleLogout}>Logout</button></li>
-        </ul>
+    
+    
+    <nav className={`navbar ${isOpen ? 'open' : ''}`}>
+      <div className="brand">{config.appTitle}</div>
+      <div className="hamburger" onClick={toggleMenu}>
+        ☰
       </div>
+      <ul className="navList">
+        {navItems.map((item, index) => (
+          <li className="navItem" key={index}>
+            {item.isButton ? (
+              <button onClick={item.onClick} className="logoutButton">{item.label}</button>
+            ) : (
+              <Link to={item.path} className="navLink">{item.label}</Link>
+            )}
+          </li>
+        ))}
+      </ul>
     </nav>
+    
   );
 };
 

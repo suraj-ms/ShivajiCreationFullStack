@@ -27,9 +27,9 @@ exports.signup = BigPromise(async (req, res, next) => {
 
 exports.login = BigPromise(async (req, res, next) => {
     const { userName, password } = req.body;
-
+   
     // check for presence of email and password
-    if (!userName || !password) {
+    if (!userName || !password) {     
         return res.status(400).json({ success: false, message:  `please provide User Name and password` });
     }
 

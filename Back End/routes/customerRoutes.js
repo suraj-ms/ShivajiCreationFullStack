@@ -2,7 +2,7 @@
 const express = require("express");
 const { createCustomer, deleteCustomer, findOneCustomer, findMultipleCustomer, findCustomersByItemStatus,updateCustomer,
     updateCustomerItems, updateAndMoveDeliveredItems, revertQuantityToCustomer, findCustomerById, searchCustomers, 
-    addItemsToCustomer, deleteItemFromCustomer
+    addItemsToCustomer, deleteItemFromCustomer, updateItemStatus
      } = require("../controllers/customerController")
 
 
@@ -21,6 +21,7 @@ router.route("/updateCustomer/:orderNumber").put(isLoggedIn, customRole('manager
 router.route("/updateCustomerItems/:orderNumber").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateCustomerItems);
 router.route("/updateAndMoveDeliveredItems").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateAndMoveDeliveredItems);
 router.route("/revertQuantityToCustomer").put(isLoggedIn, customRole('manager', 'master', 'admin'), revertQuantityToCustomer);
+router.route("/updateItemStatus").put(isLoggedIn, customRole('manager', 'master', 'admin'), updateItemStatus);
 
 router.route("/deleteCustomer/:orderNumber").delete(isLoggedIn, customRole('manager', 'master', 'admin'), deleteCustomer);
 router.route("/deleteItemFromCustomer/:customerId/:itemId").delete(isLoggedIn, customRole('manager', 'master', 'admin'), deleteItemFromCustomer);

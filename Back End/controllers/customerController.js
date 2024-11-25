@@ -428,6 +428,40 @@ exports.findCustomerById = async (req, res) => {
 };
 
 
+// Update Item Status Controller
+exports.updateItemStatus = async (req, res) => {
+  try {
+    // Extract itemId and new status from the request body
+    const { itemId, status } = req.body;
+
+    // Ensure the provided status is valid
+    const validStatuses = ['new', 'cuttingDone', 'inProgress', 'ready', 'delivered'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    // Find the item by its ID and update only the status
+    const updatedItem = await Item.findByIdAndUpdate(
+      itemId,
+      { status },
+      { new: true } // Option to return the updated document
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    // Return the updated item
+    res.status(200).json({ message: 'Item status updated successfully', item: updatedItem });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+
+
 exports.searchCustomers = async (req, res) => {
     try {
         const searchQuery = req.query.query || ''; // Default to empty string if no query is provided

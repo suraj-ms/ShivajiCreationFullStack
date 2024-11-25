@@ -1,90 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Import the CSS file
-import { Link } from 'react-router-dom';
+import api from '../../utils/api';  // Assuming api.js is in utils folder
+import './login.css'; // Import the CSS file
+import config from '../../utils/config ';
 
-function Login() {
-    
+const Login = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);  // Loading state
-  const navigate = useNavigate(); // React Router hook to navigate
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    const userData = { userName, password };
-  
-    // Start loading
-    setIsLoading(true);
-    setError('');  // Reset any previous error message
-  
+    if (!userName || !password) {
+      setError('Username and password are required');
+      return;
+    }
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_APP_BACKEND_API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-  
-      // If the response is JSON, parse it
-      const data = await response.json();
-  
-      // Handle response
-      if (response.ok && data.success) {
-        // Successful login
-        localStorage.setItem('token', data.token); // Save token to localStorage
-        navigate('/'); // Redirect to home page
-      } else {
-        // Display error message
-        setError(data.message || 'Login failed. Please try again.');
-      }
-    } catch (error) {
-      // Catch any errors (network issues, etc.)
-      console.error('Error:', error);
-      setError('An error occurred. Please try again later.');
-    } finally {
-      // End loading
-      setIsLoading(false);
+      const response = await api.post('/login', { userName, password });
+
+      // Store the token in localStorage (or cookies)
+      localStorage.setItem('authToken', response.data.token);
+
+      // Redirect to the home page or any other protected route
+      navigate('/');
+    } catch (err) {
+      console.log(err);
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleLogin}>
-        <h2>Login</h2>
-        <div>
-          <label htmlFor="userName">Username</label>
+    <div className='login_page'>
+      <h1 className='app_title'>{config.appTitle}</h1>
+      <div className="login-container">
+        <p className='login_text'>Login</p>
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            id="userName"
+            placeholder="Username"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
+            />
           <input
             type="password"
-            id="password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error && <p className="error-message">{error}</p>} {/* Show error message if any */}
-        
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Logging In...' : 'Login'}
-        </button>
-        
-        <p>Don't have an account? Please <Link to='/signup'>Sign Up</Link></p>
-      </form>
+            />
+            {error && <div className="error">{error}</div>}
+          <button className='login_submit_btn' type="submit">Log in</button>
+          {/* <h4>Forgot Password</h4> tbd */}
+        </form>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;

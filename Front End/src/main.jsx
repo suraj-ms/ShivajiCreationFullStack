@@ -1,40 +1,27 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
 import Login from './components/Login/Login.jsx';
 import Signup from './components/Signup/Signup.jsx';
 import Home from './components/Home/Home.jsx';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import PrivateRoute from './Pages/PrivateRoute'; // Import PrivateRoute
 
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />, // This is the root component
-    children: [
-      {
-        path: "/",
-        element: <Home /> // Make Home component the default page
-      },
-      {
-        path: "login",
-        element: <Login />
-      },
-      {
-        path: "signup",
-        element: <Signup />
-      },
-    ],
-  },
-]);
-
-
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<App />}>
+      <Route path="/" element={<PrivateRoute element={<Home />} />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+    </Route>
+  </Routes>
+);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Router>
+      <AppRoutes />
+    </Router>
   </StrictMode>
 );
