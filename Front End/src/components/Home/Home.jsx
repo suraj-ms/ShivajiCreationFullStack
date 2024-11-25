@@ -1,6 +1,6 @@
 import React from 'react';
 import OrderTable from '../OrderTable/OrderTable'
-import './Home.css'
+import './Home.css' 
 
 
 const Home = () => {
