@@ -17,3 +17,7 @@ body {
     background-color: var(--body-theme);
     font-family: "Roboto", sans-serif;
   }
+
+  button{
+    border: none;
+  }

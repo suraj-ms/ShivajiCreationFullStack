@@ -13,8 +13,8 @@ function OrderTable() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null); // To store the item to be edited
-  const [newStatus, setNewStatus] = useState(''); // To store the new status selected
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
 
   const itemAbbreviations = {
     Shirt: 'Sh',

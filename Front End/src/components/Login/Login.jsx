@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../utils/api';  // Assuming api.js is in utils folder
-import './Login.css'; // Import the CSS file
+import api from '../../utils/api';
+import './Login.css';
 import config from '../../utils/config ';
 
 const Login = () => {

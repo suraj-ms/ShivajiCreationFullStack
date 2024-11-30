@@ -1,0 +1,167 @@
+.add_cust_popup {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    max-height: 80%;
+    z-index: 900;
+    overflow: auto;
+    
+    position: fixed; 
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.add_cust_popup .cust_details {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+
+.add_cust_popup .cust_details input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.item hr {
+    color: #ccc;
+    margin: 5px;
+    display: none;
+}
+
+.item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin: 10px;
+}
+
+.item select {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.item input,
+.item select {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.item .quantity{
+    width: 70px;
+    margin: auto;
+}
+
+.close_btn{
+    position: absolute;
+    top: 2px;
+    width: 40px;
+    height: 40px;
+    right: 2px;
+    cursor: pointer;
+    background-color: var(--plesent-theme);
+    border-radius: 50%;
+}
+
+.close_btn:active{
+    transform: scale(0.9);
+}
+
+
+.close_btn ion-icon{
+    font-size: 2rem;
+    color: white;
+}
+
+.add_cust_popup .add_cust_popup_content .operation_btn {
+    margin: 10px;
+    padding: 10px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+
+.add_cust_popup .add_cust_popup_content .operation_btn:active{
+    transform: scale(0.9);
+}
+
+.submit_btn{
+    background-color: var(--plesent-theme);
+}
+
+.add_item_btn{
+    background-color: var(--catch-theme);
+}
+
+.remove_item_btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.remove_item_btn:active {
+    transform: scale(0.9);
+}
+
+
+.remove_item_btn ion-icon{
+    font-size: 2rem;
+}
+
+.dates{
+    padding: 10px;
+    margin: 0;
+}
+
+
+
+@media (max-width: 650px) {
+    .add_cust_popup {
+        padding: 10px;
+        margin: auto;
+
+    }
+
+    .add_cust_popup .cust_details {
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .add_cust_popup .cust_details input {
+        width: 98%;
+    }
+
+    .add_cust_popup .cust_details input,
+    .item input,
+    .item select {
+        height: 30px;
+        flex: 1;
+        margin: 0 10px;
+    }
+    .item .quantity{
+        width: 100%;
+    }
+
+    .remove_item_btn {
+        width: 30px;
+        height: 30px;
+    }
+}
