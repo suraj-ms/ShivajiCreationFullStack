@@ -11,9 +11,6 @@ const { isLoggedIn, customRole } = require("../middlewares/UserMiddleware");
 
 const router = express.Router();
 
-console.log("customer Router");
-
-
 router.route("/addCustomer").post(isLoggedIn, customRole('manager', 'master', 'admin'), createCustomer);
 router.route("/addItemsToCustomer/:customerId").post(isLoggedIn, customRole('manager', 'master', 'admin'), addItemsToCustomer);
 
