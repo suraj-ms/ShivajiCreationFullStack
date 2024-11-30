@@ -24,7 +24,7 @@ const Home = () => {
           <div className="overlay" onClick={() => setShowPopup(false)}></div>
           <AddCustPopup 
             className='add_cust_popup'
-            onClose={() => setShowPopup(false)} // Close popup when onClose is triggered
+            onClose={() => setShowPopup(false)}
             onSubmit={handleAddCustomer}
           />
         </>

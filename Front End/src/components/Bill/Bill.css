@@ -1,0 +1,154 @@
+.cust_data {
+    float: right;
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cust_data .cust_data_item {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid black;
+    width: 300px;
+    padding: 20px;
+    margin: 5px;
+    border-radius: 5px;
+    font-size: large;
+}
+
+.cust_data .cust_data_item:hover {
+    transform: scale(1.1);
+}
+
+.date {
+    width: 400px;
+    position: relative;
+    top: 30px;
+    left: 30px;
+}
+
+.date div{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.date div .date_item{
+    flex: 1;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 200px 50px;
+}
+
+.items_table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    border: 1px solid #ddd;
+}
+
+.items_table th,
+.items_table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.items_table th {
+    background-color: var(--plesent-theme);
+    font-weight: bold;
+}
+
+.items_table td {
+    background-color: #fff;
+}
+
+.items_table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.total-price {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 20px;
+    text-align: right;
+
+}
+
+.send_bill{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--plesent-theme);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.send_bill:active{
+    transform: scale(0.9);
+}
+
+.send_bill ion-icon{
+    font-size: 2rem;
+    color: white;
+}
+
+
+@media (max-width: 650px) {
+    .cust_data {
+        float: none;
+        position: relative;
+        left: 5px;
+    }
+
+    .cust_data .cust_data_item {
+        padding: 6px;
+    }
+
+    .date {
+        width: 100%;
+        padding: 5px;
+        top: 0;
+        left: 0;
+    }
+
+    .table-container {
+        width: 100%;
+        margin: 0;
+    }
+
+    .items_table {
+        width: 100%;
+    }
+
+    .items_table th,
+    .items_table td {
+        padding: 10px 8px;
+    }
+
+    .items_table th {
+        font-size: 14px;
+    }
+
+    .items_table td {
+        font-size: 12px;
+    }
+
+    .total-price {
+        margin-right: 10px;
+    }
+    .send_bill{
+        
+        width: 50px;
+        height: 50px;
+    }
+}
