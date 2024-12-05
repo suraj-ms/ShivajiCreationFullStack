@@ -47,22 +47,19 @@ function OrderTable() {
     }
   };
 
-  const fetchData = async (query = '') => {
+  const fetchData = async (query = '', page = 1, limit = 5) => {
     setLoading(true);
     setError(null);
-
+  
     try {
-      let url = '/findCustomersByItemStatus';
-      if (query) {
-        url = `/searchCustomers?query=${query}&page=${page}&limit=${limit}`;
-      }
-
+      let url = `/searchCustomers?query=${query}&page=${page}&limit=${limit}`;
+  
       const response = await api.get(url);
       const validatedData = response.data.customers.map((customer) => ({
         ...customer,
         itemsOrdered: Array.isArray(customer.itemsOrdered) ? customer.itemsOrdered : [],
       }));
-
+  
       setData(validatedData);
       setTotalPages(Math.ceil(response.data.totalCount / limit));
     } catch (err) {
@@ -71,6 +68,7 @@ function OrderTable() {
       setLoading(false);
     }
   };
+  
 
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -144,8 +142,9 @@ function OrderTable() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [page, limit]);
+    fetchData(searchQuery, page, limit);
+  }, [searchQuery, page, limit]);
+  
 
   return (
     <div className="orderTable-container">
