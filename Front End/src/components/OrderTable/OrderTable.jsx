@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // For navigation
 import './OrderTable.css';
-import api from '../../utils/api';
+import api from '../../utils/api'; // Assuming an API helper for making requests
 
 function OrderTable() {
   const [data, setData] = useState([]);
@@ -12,13 +12,11 @@ function OrderTable() {
   const [totalPages, setTotalPages] = useState(1);
   const [sortOrder, setSortOrder] = useState('asc');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const [showPopup, setShowPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false); // For row popup
   const [selectedRow, setSelectedRow] = useState(null); // For row popup
-
-  const [showItemPopup, setShowItemPopup] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
+  const [showItemPopup, setShowItemPopup] = useState(false); // For item status popup
+  const [selectedItem, setSelectedItem] = useState(null); // Selected item for status update
+  const [newStatus, setNewStatus] = useState(''); // New status for selected item
 
   const navigate = useNavigate(); // For navigation
 
@@ -60,7 +58,6 @@ function OrderTable() {
       }
 
       const response = await api.get(url);
-
       const validatedData = response.data.customers.map((customer) => ({
         ...customer,
         itemsOrdered: Array.isArray(customer.itemsOrdered) ? customer.itemsOrdered : [],
@@ -103,6 +100,32 @@ function OrderTable() {
     setShowItemPopup(true);
   };
 
+  const updateItemStatus = async (itemId, newStatus) => {
+    try {
+      const response = await api.put('/updateItemStatus', { itemId, status: newStatus });
+
+      if (response.status === 200) {
+        const updatedItem = response.data.item;
+
+        // Update the local state to reflect the new status
+        const updatedData = data.map((customer) => ({
+          ...customer,
+          itemsOrdered: customer.itemsOrdered.map((item) =>
+            item._id === itemId ? { ...item, status: updatedItem.status } : item
+          ),
+        }));
+
+        setData(updatedData);
+      } else {
+        throw new Error('Failed to update status');
+      }
+    } catch (err) {
+      setError(err.response ? err.response.data.message : err.message);
+    } finally {
+      setShowItemPopup(false);
+    }
+  };
+
   const handleRowClick = (customer) => {
     setSelectedRow(customer);
     setShowPopup(true);
@@ -123,8 +146,6 @@ function OrderTable() {
   useEffect(() => {
     fetchData();
   }, [page, limit]);
-
-  const paginatedData = data.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="orderTable-container">
@@ -149,42 +170,34 @@ function OrderTable() {
               <th>Customer Name</th>
               <th>Items</th>
               <th onClick={handleSort} style={{ cursor: 'pointer' }}>
-                Earliest Due Date
-                {sortOrder === 'asc' ? ' 🔼' : ' 🔽'}
+                Earliest Due Date {sortOrder === 'asc' ? ' 🔼' : ' 🔽'}
               </th>
               <th>Phone Number</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((customer, index) => (
+            {data.map((customer, index) => (
               <tr key={index} onClick={() => handleRowClick(customer)}>
-                <td data-label="Order Number">{customer._id}</td>
-                <td data-label="Customer Name">{customer.customerName}</td>
-                <td
-                  data-label="Items"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }} // Prevent row click on item click
-                >
+                <td>{customer._id}</td>
+                <td>{customer.customerName}</td>
+                <td onClick={(e) => e.stopPropagation()}>
                   {customer.itemsOrdered.map((item, itemIndex) => (
                     <div key={itemIndex}>
                       <span
                         className={`status-badge ${getStatusClass(item.status)}`}
                         onClick={() => handleItemClick(item)}
                       >
-                        {`${item.quantity} ${
-                          itemAbbreviations[item.itemName] || item.itemName.slice(0, 2).toUpperCase()
-                        }`}
+                        {`${item.quantity} ${itemAbbreviations[item.itemName] || item.itemName.slice(0, 2).toUpperCase()}`}
                       </span>
                     </div>
                   ))}
                 </td>
-                <td data-label="Earliest Due Date">
+                <td>
                   {formatDate(
                     Math.min(...customer.itemsOrdered.map((item) => new Date(item.dueDate).getTime()))
                   )}
                 </td>
-                <td data-label="Phone Number">{customer.phoneNumber}</td>
+                <td>{customer.phoneNumber}</td>
               </tr>
             ))}
           </tbody>
@@ -193,18 +206,13 @@ function OrderTable() {
         <p>No data available</p>
       )}
 
+      {/* Pagination */}
       <div className="pagination">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-        >
+        <button disabled={page === 1} onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>
           Previous
         </button>
         <span>Page {page}</span>
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-        >
+        <button disabled={page === totalPages} onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}>
           Next
         </button>
         <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
@@ -214,8 +222,8 @@ function OrderTable() {
         </select>
       </div>
 
-      {/* Popup for row navigation */}
-      {showPopup && selectedRow && (
+      {/* Row Popup */}
+      {showPopup && (
         <div className="popup-overlay">
           <div className="popup">
             <h3>Order Options</h3>
@@ -226,15 +234,12 @@ function OrderTable() {
         </div>
       )}
 
-      {/* Popup for editing item status */}
+      {/* Status Popup */}
       {showItemPopup && (
         <div className="popup-overlay">
           <div className="popup">
             <h3>Edit Status</h3>
-            <select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value)}
-            >
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
               <option value="new">New</option>
               <option value="cuttingDone">Cutting Done</option>
               <option value="inProgress">In Progress</option>
@@ -242,7 +247,7 @@ function OrderTable() {
               <option value="delivered">Delivered</option>
             </select>
             <div>
-              <button onClick={() => setShowItemPopup(false)}>Update</button>
+              <button onClick={() => updateItemStatus(selectedItem._id, newStatus)}>Update</button>
               <button onClick={() => setShowItemPopup(false)}>Cancel</button>
             </div>
           </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import './Login.css';
-import config from '../../utils/config ';
+import config from '../../utils/config';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -27,11 +27,7 @@ const Login = () => {
 
     try {
       const response = await api.post('/login', { userName, password });
-
-      // Store the token in localStorage (or cookies)
       localStorage.setItem('authToken', response.data.token);
-
-      // Redirect to the home page or any other protected route
       navigate('/');
     } catch (err) {
       console.log(err);
@@ -51,14 +47,14 @@ const Login = () => {
             placeholder="Username"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            />
+          />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            />
-            {error && <div className="error">{error}</div>}
+          />
+          {error && <div className="error">{error}</div>}
           <button className='login_submit_btn' type="submit">Log in</button>
           {/* <h4>Forgot Password</h4> tbd */}
         </form>

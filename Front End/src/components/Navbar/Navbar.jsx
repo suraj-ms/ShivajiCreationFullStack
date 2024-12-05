@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
-import config from '../../utils/config ';
+import config from '../../utils/config';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    
+
     navigate('/login');
   };
 
@@ -23,8 +23,8 @@ const Navbar = () => {
   ];
 
   return (
-    
-    
+
+
     <nav className={`navbar ${isOpen ? 'open' : ''}`}>
       <div className="brand">{config.appTitle}</div>
       <div className="hamburger" onClick={toggleMenu}>
@@ -42,7 +42,7 @@ const Navbar = () => {
         ))}
       </ul>
     </nav>
-    
+
   );
 };
 
