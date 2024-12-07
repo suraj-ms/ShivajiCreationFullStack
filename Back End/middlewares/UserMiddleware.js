@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 
 exports.isLoggedIn = BigPromise(async (req, res, next) => {
   // const token = req.cookies.token || req.header("Authorization").replace("Bearer ", "");
-  
+
 
   // check token first in cookies
   let token = req.cookies.token;
@@ -24,7 +24,7 @@ exports.isLoggedIn = BigPromise(async (req, res, next) => {
   req.user = await User.findById(decoded.id);
 
   console.log(req.user);
-  
+
 
   next();
 });
@@ -32,7 +32,7 @@ exports.isLoggedIn = BigPromise(async (req, res, next) => {
 exports.customRole = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(new CustomError("You are not authorized for this resouce", 403));
+      return res.status(403).json({ success: false, message: `You are not authorized for this resource` });
     }
     console.log(req.user.role);
     next();

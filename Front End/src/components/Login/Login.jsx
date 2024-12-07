@@ -26,8 +26,12 @@ const Login = () => {
     }
 
     try {
+      
+      
       const response = await api.post('/login', { userName, password });
+      localStorage.setItem('role', response.data.user.role);
       localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('loggedInUserName', response.data.user.userName); 
       navigate('/');
     } catch (err) {
       console.log(err);

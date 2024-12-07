@@ -73,11 +73,17 @@ const AddCustPopup = ({ onClose, onSubmit }) => {
             const response = await api.post('/addCustomer', newCustomer);
 
             if (response.status === 200) {
-                onSubmit(newCustomer);  // Notify parent with the new customer data
-                onClose();              // Close the popup
+                onSubmit(newCustomer);
+                onClose();
             }
         } catch (error) {
-            console.error('Failed to add customer. Please try again later.');
+            if (error.response && error.response.status === 403) {
+                const errorMessage = error.response.data.message;
+                console.log('Unauthorized access:', errorMessage);
+                alert("You are not allowed the add customer please connect with higer management to add customer");
+            } else {
+                console.error(error || 'Failed to add customer. Please try again later.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -140,17 +146,20 @@ const AddCustPopup = ({ onClose, onSubmit }) => {
                     </div>
                 ))}
                 <div className="dates">
-                    <input
-                        type="date"
-                        value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        placeholder="Due Date"
-                    />
+
+                    <label htmlFor="">Trail Date</label>
                     <input
                         type="date"
                         value={trialDate}
                         onChange={(e) => setTrialDate(e.target.value)}
                         placeholder="Trial Date"
+                    />
+                    <label htmlFor="">Due Date</label>
+                    <input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        placeholder="Due Date"
                     />
                 </div>
                 <button onClick={addItem} className="add_item_btn operation_btn">

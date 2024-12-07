@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // For navigation
+import { useNavigate } from 'react-router-dom';
 import './OrderTable.css';
-import api from '../../utils/api'; // Assuming an API helper for making requests
+import api from '../../utils/api';
 
 function OrderTable() {
   const [data, setData] = useState([]);
@@ -50,16 +50,16 @@ function OrderTable() {
   const fetchData = async (query = '', page = 1, limit = 5) => {
     setLoading(true);
     setError(null);
-  
+
     try {
       let url = `/searchCustomers?query=${query}&page=${page}&limit=${limit}`;
-  
+
       const response = await api.get(url);
       const validatedData = response.data.customers.map((customer) => ({
         ...customer,
         itemsOrdered: Array.isArray(customer.itemsOrdered) ? customer.itemsOrdered : [],
       }));
-  
+
       setData(validatedData);
       setTotalPages(Math.ceil(response.data.totalCount / limit));
     } catch (err) {
@@ -68,7 +68,7 @@ function OrderTable() {
       setLoading(false);
     }
   };
-  
+
 
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -144,7 +144,7 @@ function OrderTable() {
   useEffect(() => {
     fetchData(searchQuery, page, limit);
   }, [searchQuery, page, limit]);
-  
+
 
   return (
     <div className="orderTable-container">
@@ -162,45 +162,51 @@ function OrderTable() {
       ) : error ? (
         <p style={{ color: 'red' }}>{error}</p>
       ) : data.length > 0 ? (
-        <table className="orderTable">
-          <thead>
-            <tr>
-              <th>Order Number</th>
-              <th>Customer Name</th>
-              <th>Items</th>
-              <th onClick={handleSort} style={{ cursor: 'pointer' }}>
-                Earliest Due Date {sortOrder === 'asc' ? ' 🔼' : ' 🔽'}
-              </th>
-              <th>Phone Number</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((customer, index) => (
-              <tr key={index} onClick={() => handleRowClick(customer)}>
-                <td>{customer._id}</td>
-                <td>{customer.customerName}</td>
-                <td onClick={(e) => e.stopPropagation()}>
-                  {customer.itemsOrdered.map((item, itemIndex) => (
-                    <div key={itemIndex}>
-                      <span
-                        className={`status-badge ${getStatusClass(item.status)}`}
-                        onClick={() => handleItemClick(item)}
-                      >
-                        {`${item.quantity} ${itemAbbreviations[item.itemName] || item.itemName.slice(0, 2).toUpperCase()}`}
-                      </span>
-                    </div>
-                  ))}
-                </td>
-                <td>
-                  {formatDate(
-                    Math.min(...customer.itemsOrdered.map((item) => new Date(item.dueDate).getTime()))
-                  )}
-                </td>
-                <td>{customer.phoneNumber}</td>
+        <div className="table-wrapper"> {/* Added wrapper for horizontal scroll */}
+          <table className="orderTable">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer Name</th>
+                <th style={{ width: "200px" }}>Items</th>
+                <th onClick={handleSort} style={{ cursor: 'pointer' }}>
+                  Due Date {sortOrder === 'asc' ? ' 🔼' : ' 🔽'}
+                </th>
+                <th>Phone Number</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((customer, index) => (
+                <tr key={index} onClick={() => handleRowClick(customer)}>
+                  <td>{customer._id}</td>
+                  <td>{customer.customerName}</td>
+                  <td className="items-column" onClick={(e) => e.stopPropagation()}>
+                    {customer.itemsOrdered.map((item, itemIndex) => (
+                      <div style={{ display: "inline-block", marginBottom: '5px' }} key={itemIndex}>
+                        <span
+                          className={`status-badge ${getStatusClass(item.status)}`}
+                          onClick={() => handleItemClick(item)}
+                        >
+                          {`${item.quantity} ${itemAbbreviations[item.itemName] || item.itemName.slice(0, 2).toUpperCase()}`}
+                        </span>
+                      </div>
+                    ))}
+                  </td>
+                  <td>
+                    {customer.itemsOrdered.length > 0 && customer.itemsOrdered.some((item) => item.dueDate)
+                      ? formatDate(
+                        Math.min(...customer.itemsOrdered.filter((item) => item.dueDate).map((item) => new Date(item.dueDate).getTime())
+                        )
+                      )
+                      : 'NA'}
+                  </td>
+
+                  <td onClick={(e) => e.stopPropagation()}><a href="tel:{customer.phoneNumber}" style={{ color: '#000' }}>{customer.phoneNumber}</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p>No data available</p>
       )}
@@ -253,6 +259,7 @@ function OrderTable() {
         </div>
       )}
     </div>
+
   );
 }
 

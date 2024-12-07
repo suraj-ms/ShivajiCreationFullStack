@@ -27,30 +27,17 @@ exports.signup = BigPromise(async (req, res, next) => {
 
 exports.login = BigPromise(async (req, res, next) => {
     const { userName, password } = req.body;
-   
-    // check for presence of email and password
     if (!userName || !password) {     
         return res.status(400).json({ success: false, message:  `please provide User Name and password` });
     }
-
-    // get user from DB
     const user = await User.findOne({ userName }).select("+password");
-
-    // if user not found in DB
-    // In the backend (userControllers.js or similar)
     if (!user) {
         return res.status(401).json({ success: false, message: 'Username or password does not match or exist' });
     }
-
-    // match the password
     const isPasswordCorrect = await user.isValidatedPassword(password);
-
-    //if password do not match
     if (!isPasswordCorrect) {
         return res.status(401).json({ success: false, message:  `password does not match or exist` });
     }
-
-    // if all goes good and we send the token
     cookieToken(user, res);
 });
 

@@ -10,8 +10,13 @@ const customerSchema = new mongoose.Schema({
     // match: [/^\d{10}$/, 'Please enter a valid phone number'] 
   },
   itemsOrdered: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
+  advances: [
+    {
+      amount: { type: Number, required: true },
+      date: { type: Date, required: true },
+      editorName: { type: String }
+    }
+  ]
 }, { timestamps: true });
 
-
 module.exports = mongoose.model('Customers', customerSchema);
-

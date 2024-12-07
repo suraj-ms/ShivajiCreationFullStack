@@ -1,21 +1,26 @@
-// PrivateRoute.jsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import Navbar from '../components/Navbar/Navbar';
 
-const PrivateRoute = ({ element }) => {
+const PrivateRoute = ({ element, requiredRole }) => {
   const token = localStorage.getItem('authToken');
+  const role = localStorage.getItem('role');
 
-  if (token) {
-    return (
-      <>
-        <Navbar /> {/* Render the Navbar */}
-        {element} {/* Render the passed element */}
-      </>
-    );
+  if (!token) {
+    return <Navigate to="/login" />;
   }
 
-  return <Navigate to="/login" />; // Redirect to login if not authenticated
+  if (requiredRole && role !== requiredRole) {
+    return <Navigate to="/" />;
+  }
+
+  return (
+    <>
+    
+      <Navbar />
+      {element}
+    </>
+  );
 };
 
 export default PrivateRoute;

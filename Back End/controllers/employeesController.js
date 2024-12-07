@@ -1,8 +1,5 @@
-const Employee = require('../model/EmployeesModel'); // Adjust the path as necessary
-
-const ItemPrice = require('../model/Item&Price'); // Adjust the path as needed
-
-
+const Employee = require('../model/EmployeesModel');
+const ItemPrice = require('../model/Item&Price');
 
 exports.createEmp = async (req, res) => {
   try {
@@ -43,7 +40,6 @@ exports.createEmp = async (req, res) => {
     });
   }
 };
-
 
 exports.updateEmp = async (req, res) => {
   try {
@@ -93,7 +89,6 @@ exports.updateEmp = async (req, res) => {
   }
 };
 
-
 exports.deleteEmp = async (req, res) => {
   try {
     const { empid } = req.params; // Get the employee ID from the URL parameters
@@ -121,7 +116,6 @@ exports.deleteEmp = async (req, res) => {
     });
   }
 };
-
 
 exports.getSingleEmp = async (req, res) => {
   try {

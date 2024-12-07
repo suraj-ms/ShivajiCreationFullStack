@@ -39,4 +39,8 @@
     .add_cust ion-icon{
         font-size: 2rem;
     }
+
+    .homePage{
+        padding: 0;
+    }
 }

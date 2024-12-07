@@ -9,6 +9,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('role');
 
     navigate('/login');
   };
@@ -17,16 +18,22 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
+  const role = localStorage.getItem('role');
+
   const navItems = [
     { label: 'Employee', path: '/login' },
     { label: 'Logout', path: '#', onClick: handleLogout, isButton: true },
   ];
 
+  if (role === 'admin') {
+    navItems.unshift({ label: 'Admin Panel', path: '/admin' });
+  }
+
   return (
 
 
     <nav className={`navbar ${isOpen ? 'open' : ''}`}>
-      <div className="brand">{config.appTitle}</div>
+      <div ><Link className="brand" to={'/'}>{config.appTitle}</Link></div>
       <div className="hamburger" onClick={toggleMenu}>
         ☰
       </div>
@@ -41,6 +48,7 @@ const Navbar = () => {
           </li>
         ))}
       </ul>
+      
     </nav>
 
   );

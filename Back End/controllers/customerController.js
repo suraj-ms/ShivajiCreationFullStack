@@ -5,10 +5,7 @@ const ItemPrice = require('../model/Item&Price');
 const OldCustomerOrder = require('../model/oldCustomerOrder');
 const DeletedCustomer = require('../model/DeletedCustomerModel');
 const DeletedCustomerItem = require('../model/DeletedCustomerItemsModel');
-
 const mongoose = require('mongoose');
-
-
 
 exports.createCustomer = BigPromise(async (req, res, next) => {
     const { customerName, phoneNumber, orderNumber, items } = req.body;
@@ -63,13 +60,11 @@ exports.createCustomer = BigPromise(async (req, res, next) => {
     });
 });
 
-// with 1 month span
 exports.deleteCustomer = BigPromise(async (req, res, next) => {
     const { orderNumber } = req.params;
 
     console.log(`orderNumber: ${orderNumber}`);
 
-    // Find the customer by the provided order number (customer ID)
     const customer = await Customer.findById(orderNumber);
 
     if (!customer) {
@@ -85,7 +80,6 @@ exports.deleteCustomer = BigPromise(async (req, res, next) => {
     const deletedCustomer = new DeletedCustomer(deletedCustomerData);
     await deletedCustomer.save();
 
-    // Find all items associated with this customer
     const itemsToDelete = await Item.find({ customer: customer._id });
 
     const deletedItems = itemsToDelete.map(item => ({
@@ -98,33 +92,27 @@ exports.deleteCustomer = BigPromise(async (req, res, next) => {
         customer: item.customer,
     }));
 
-    // Insert all deleted items into DeletedCustomerItems collection
     await DeletedCustomerItem.insertMany(deletedItems);
 
-    // Delete associated items from the Item collection
     const deleteItemsResult = await Item.deleteMany({ customer: customer._id });
     if (deleteItemsResult.deletedCount === 0) {
         console.log(`No items found for customer with order number: ${orderNumber}`);
     }
 
-    // Delete old customer orders
     await OldCustomerOrder.deleteMany({ customer: customer._id });
 
-    // Delete the customer from the Customer collection
     const deleteCustomerResult = await Customer.deleteOne({ _id: orderNumber });
 
     if (deleteCustomerResult.deletedCount === 0) {
         return res.status(500).json({ success: false, message: `Failed to delete customer with order number:` });
     }
 
-    // Respond with success message
     res.status(200).json({
         success: true,
         message: `Customer with order number ${orderNumber} and their items have been deleted, and the data is saved in the DeletedCustomer and DeletedCustomerItem collections.`,
         deletedCustomer: customer,
     });
 });
-
 
 exports.findOneCustomer = BigPromise(async (req, res, next) => {
     const { orderNumber } = req.params;
@@ -143,7 +131,6 @@ exports.findOneCustomer = BigPromise(async (req, res, next) => {
         customer,
     });
 });
-
 
 exports.findMultipleCustomer = BigPromise(async (req, res, next) => {
     const { orderNumbers } = req.body;
@@ -173,7 +160,6 @@ exports.findMultipleCustomer = BigPromise(async (req, res, next) => {
 
     return res.status(200).json(response);
 });
-
 
 exports.findCustomersByItemStatus = BigPromise(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
@@ -210,7 +196,6 @@ exports.findCustomersByItemStatus = BigPromise(async (req, res) => {
         customers,
     });
 });
-
 
 exports.updateCustomer = async (req, res) => {
     const { orderNumber } = req.params;
@@ -270,75 +255,69 @@ exports.updateCustomerItems = async (req, res) => {
 
 };
 
-
-
 exports.updateAndMoveDeliveredItems = async (req, res) => {
     const { items } = req.body;
     const session = await mongoose.startSession();
-  
+
     try {
-      session.startTransaction();
-  
-      for (const itemData of items) {
-        const { itemId, customerId, quantity } = itemData;
-  
-        const item = await Item.findById(itemId).session(session);
-        if (!item) {
-          throw new Error(`Item with id ${itemId} not found`);
+        session.startTransaction();
+
+        for (const itemData of items) {
+            const { itemId, customerId, quantity } = itemData;
+
+            const item = await Item.findById(itemId).session(session);
+            if (!item) {
+                throw new Error(`Item with id ${itemId} not found`);
+            }
+
+            if (item.quantity < quantity) {
+                throw new Error(`Not enough quantity of item ${itemId} to deliver`);
+            }
+
+            item.quantity -= quantity;
+            await item.save({ session });
+
+            let oldOrder = await OldCustomerOrder.findOne({
+                item: item._id,
+                customer: customerId,
+            }).session(session);
+
+            if (oldOrder) {
+                oldOrder.quantity += quantity;
+                await oldOrder.save({ session });
+            } else {
+                // When creating a new order, include the itemName
+                const oldCustomerOrder = new OldCustomerOrder({
+                    item: item._id,
+                    itemName: item.itemName,  // Send item name here
+                    customer: customerId,
+                    quantity,
+                    status: 'delivered',
+                });
+                await oldCustomerOrder.save({ session });
+            }
+
+            if (item.quantity === 0) {
+                await item.deleteOne({ session });
+            }
         }
-  
-        if (item.quantity < quantity) {
-          throw new Error(`Not enough quantity of item ${itemId} to deliver`);
-        }
-  
-        item.quantity -= quantity;
-        await item.save({ session });
-  
-        let oldOrder = await OldCustomerOrder.findOne({
-          item: item._id,
-          customer: customerId,
-        }).session(session);
-  
-        if (oldOrder) {
-          oldOrder.quantity += quantity;
-          await oldOrder.save({ session });
-        } else {
-          // When creating a new order, include the itemName
-          const oldCustomerOrder = new OldCustomerOrder({
-            item: item._id,
-            itemName: item.itemName,  // Send item name here
-            customer: customerId,
-            quantity,
-            status: 'delivered',
-          });
-          await oldCustomerOrder.save({ session });
-        }
-  
-        if (item.quantity === 0) {
-          await item.deleteOne({ session });
-        }
-      }
-  
-      await session.commitTransaction();
-      session.endSession();
-  
-      res.status(200).json({
-        message: 'Items updated, old orders recorded, and items deleted successfully',
-      });
-  
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).json({
+            message: 'Items updated, old orders recorded, and items deleted successfully',
+        });
+
     } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error(err);
-      res.status(500).json({ message: 'An error occurred while processing the request', error: err.message });
+        await session.abortTransaction();
+        session.endSession();
+        console.error(err);
+        res.status(500).json({ message: 'An error occurred while processing the request', error: err.message });
     }
-  };
-  
+};
 
-
-
-
-  exports.revertQuantityToCustomer = async (req, res) => {
+exports.revertQuantityToCustomer = async (req, res) => {
     const { items } = req.body;
     const session = await mongoose.startSession();
 
@@ -405,8 +384,6 @@ exports.updateAndMoveDeliveredItems = async (req, res) => {
     }
 };
 
-
-
 exports.findCustomerById = async (req, res) => {
     try {
         const customerId = req.params.id;
@@ -427,40 +404,35 @@ exports.findCustomerById = async (req, res) => {
     }
 };
 
-
-// Update Item Status Controller
 exports.updateItemStatus = async (req, res) => {
-  try {
-    // Extract itemId and new status from the request body
-    const { itemId, status } = req.body;
+    try {
+        // Extract itemId and new status from the request body
+        const { itemId, status } = req.body;
 
-    // Ensure the provided status is valid
-    const validStatuses = ['new', 'cuttingDone', 'inProgress', 'ready', 'delivered'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+        // Ensure the provided status is valid
+        const validStatuses = ['new', 'cuttingDone', 'inProgress', 'ready', 'delivered'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid status' });
+        }
+
+        // Find the item by its ID and update only the status
+        const updatedItem = await Item.findByIdAndUpdate(
+            itemId,
+            { status },
+            { new: true } // Option to return the updated document
+        );
+
+        if (!updatedItem) {
+            return res.status(404).json({ message: 'Item not found' });
+        }
+
+        // Return the updated item
+        res.status(200).json({ message: 'Item status updated successfully', item: updatedItem });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
     }
-
-    // Find the item by its ID and update only the status
-    const updatedItem = await Item.findByIdAndUpdate(
-      itemId,
-      { status },
-      { new: true } // Option to return the updated document
-    );
-
-    if (!updatedItem) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
-    // Return the updated item
-    res.status(200).json({ message: 'Item status updated successfully', item: updatedItem });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
 };
-
-
-
 
 exports.searchCustomers = async (req, res) => {
     try {
@@ -561,8 +533,8 @@ exports.addItemsToCustomer = async (req, res) => {
 
 };
 
-
 exports.deleteItemFromCustomer = async (req, res) => {
+    console.log("Hello");
     try {
         const { customerId, itemId } = req.params;
 
@@ -592,5 +564,172 @@ exports.deleteItemFromCustomer = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'An error occurred while deleting the item', error: err.message });
+    }
+};
+
+
+exports.addAdvance = async (req, res) => {
+    const { orderNumber, amount, date, editorName } = req.body;
+
+    // Validate editorName
+    if (!editorName) {
+        return res.status(400).json({ message: 'Editor name is required' });
+    }
+
+    console.log(req.body);
+
+    try {
+        const customer = await Customer.findById(orderNumber);
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
+        customer.advances.push({
+            amount,
+            date,
+            editorName,
+        });
+
+        await customer.save();
+        res.status(200).json({ message: 'Advance added successfully', customer });
+    } catch (err) {
+        console.error('Error adding advance:', err);
+        res.status(500).json({ message: 'Error adding advance', error: err.message });
+    }
+};
+
+exports.deleteAdvance = async (req, res) => {
+    const { advanceId } = req.params;
+
+    console.log('Advance ID received:', advanceId);
+
+    try {
+        // Correctly instantiate the ObjectId
+        const advanceObjectId = new mongoose.Types.ObjectId(advanceId);
+
+        const customer = await Customer.findOne({ 'advances._id': advanceObjectId });
+
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer or advance not found' });
+        }
+
+        console.log('Customer found:', customer);
+
+        // Remove the advance by its ID
+        customer.advances.pull(advanceObjectId);
+
+        // Save the customer after removing the advance
+        await customer.save();
+        
+        res.status(200).json({ message: 'Advance deleted successfully' });
+    } catch (err) {
+        console.error('Error:', err);
+        res.status(500).json({ message: 'Error deleting advance', error: err.message });
+    }
+};
+
+
+exports.editAdvance = async (req, res) => {
+    const { advanceId, amount, editorName } = req.body;
+    
+
+    try {
+        const customer = await Customer.findOne({ 'advances._id': advanceId });
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer or advance not found' });
+        }
+
+        const advance = customer.advances.id(advanceId);
+        advance.amount = amount;
+        advance.editorName = editorName; // Update the editor's name on the advance
+
+        await customer.save();
+        res.status(200).json({ message: 'Advance updated successfully', customer });
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating advance', error: err });
+    }
+};
+
+exports.updateCustomerAndItems = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const { customerName, phoneNumber, items } = req.body;
+
+        // Find customer by ID
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
+        // Update customer details (name and phone number)
+        if (customerName) customer.customerName = customerName;
+        if (phoneNumber) customer.phoneNumber = phoneNumber;
+
+        // Create an array to store updated item IDs
+        const updatedItemIds = [];
+
+        // Process the items to either update or create them
+        if (items && items.length > 0) {
+            for (const itemData of items) {
+                if (itemData._id) {
+                    // Update existing item
+                    const item = await Item.findById(itemData._id);
+                    if (item) {
+                        item.itemName = itemData.itemName;
+                        item.quantity = itemData.quantity;
+                        await item.save();
+                        updatedItemIds.push(item._id);  // Save the item ID for customer reference
+                    }
+                } else {
+                    // Create new item if no _id exists
+                    const newItem = new Item({
+                        itemName: itemData.itemName,
+                        quantity: itemData.quantity,
+                        customer: customerId,  // Link the item to the customer
+                    });
+                    await newItem.save();
+                    updatedItemIds.push(newItem._id);  // Add the new item's ID to the list
+                }
+            }
+        }
+
+        // Update the customer's itemsOrdered field with the new item IDs
+        customer.itemsOrdered = updatedItemIds;
+
+        // Save the updated customer data
+        await customer.save();
+
+        res.status(200).json({ message: 'Customer and items updated successfully', customer });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+exports.updateItemDates = async (req, res) => {
+    const { customerId } = req.params;
+    const { trialDate, dueDate } = req.body;
+
+    console.log(req.body);
+    
+
+    try {
+        // Find all items of the customer by their customer field
+        const updatedItems = await Item.updateMany(
+            { customer: customerId },  // Match items with the specific customer
+            { 
+                trialDate: trialDate,  // Update the trialDate
+                dueDate: dueDate       // Update the dueDate
+            }
+        );
+
+        if (updatedItems.modifiedCount > 0) {
+            return res.status(200).json({ message: 'Item dates updated successfully!' });
+        } else {
+            return res.status(400).json({ message: 'No items found to update or no changes made.' });
+        }
+    } catch (error) {
+        console.error('Error updating item dates:', error);
+        return res.status(500).json({ message: 'Server Error' });
     }
 };

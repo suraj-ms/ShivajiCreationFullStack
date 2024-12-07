@@ -1,3 +1,9 @@
+
+.space{
+    width: 100%;
+    height:  70px;
+}
+
 .cust_data {
     float: right;
     margin: 20px;
@@ -71,7 +77,7 @@
     background-color: #f1f1f1;
 }
 
-.total-price {
+.total-price, .total-advance {
     font-size: 1.2em;
     font-weight: bold;
     margin-top: 20px;
@@ -143,7 +149,7 @@
         font-size: 12px;
     }
 
-    .total-price {
+    .total-price, .total-advance {
         margin-right: 10px;
     }
     .send_bill{
@@ -151,4 +157,241 @@
         width: 50px;
         height: 50px;
     }
+}
+
+.Advance_buttons{
+    position: fixed;
+    bottom: 5px;
+    display: flex;
+    flex-direction: column;
+    right: 2px;
+}
+
+/* Add Advance Button */
+.add-advance-button, .edit-advance-button, .edit-user-button {
+    padding: 10px 20px;
+    background-color: var(--plesent-theme);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 2px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.add-advance-button:hover, .edit-advance-button:hover, .edit-user-button:hover{
+    background-color: var(--plesent-theme-war);
+}
+
+.delete_item_in_table{
+padding: 5px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  background-color: var(--plesent-theme);
+  color: white;
+  cursor: pointer;
+}
+
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+}
+
+.cust_edit_base_data{
+    display: flex;
+}
+
+.edit_advance_item{
+    margin: 10px;
+    background-color: #ccc;
+    border-radius: 5px;
+}
+
+.edit_advance_btn{
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: var(--plesent-theme);
+    color: white;
+}
+
+
+
+.modal-content input {
+    padding: 8px;
+    font-size: 16px;
+    width: 80%;
+    margin-right: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.close_edit_popup{
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+.edit_cust_item_data{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+}
+
+.edit_cust_item_data select{
+    width: 100%;
+    padding: 10px;
+    margin: 10px;
+}
+
+.edit_cust_item_data .edit_cust_item_quantity_data{
+    width: 60px;
+}
+.delete_edit_cust_item_btn{
+    background-color: var(--plesent-theme);
+    padding: 2px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-around;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    background-color: var(--plesent-theme);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-actions button:hover {
+    background-color: var(--plesent-theme-war);
+}
+
+
+/* Edit/Delete buttons for each advance in the list */
+.advances-list button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.advances-list button:hover {
+    background-color: #007B9E;
+}
+
+/* Total Advance and Total Price */
+.total-price, .total-advance {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 90%;
+    }
+
+    .add-advance-button, .edit-advance-button, .edit-user-button {
+        width: 100%;
+    }
+
+    .cust_edit_base_data{
+        flex-direction: column;
+
+    }
+
+    .cust_edit_base_data input{
+        width: 100%;
+    }
+
+    .Advance_buttons{
+        flex-direction: row;
+    }
+    
+}
+
+ion-icon{
+    font-size: 1.2rem;
+}
+
+.confirmation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.confirmation-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.modal-actions button {
+    margin: 10px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.modal-actions button:hover {
+    background-color: #0056b3;
+}
+
+
+.confirmation-modal{
+    z-index: 1001;
 }
