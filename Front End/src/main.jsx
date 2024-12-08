@@ -11,12 +11,15 @@ import AdminPanel from './components/AdminPanel/AdminPanel.jsx';
 import Bill from './components/Bill/Bill.jsx';
 import PrivateRoute from './Pages/PrivateRoute';
 
+import { Provider } from 'react-redux';
+import store from './utils/redux/Measurement/store.js';
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<App />}>
       <Route path="/" element={<PrivateRoute element={<Home />} />} />
       <Route path="/measurement/:orderNumber" element={<PrivateRoute element={<Measurement />} />} />
-      <Route path="/bill/:orderNumber" element={<PrivateRoute element={<Bill  />} />} />
+      <Route path="/bill/:orderNumber" element={<PrivateRoute element={<Bill />} />} />
       <Route path="/admin" element={<PrivateRoute element={<AdminPanel />} />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
@@ -27,7 +30,9 @@ const AppRoutes = () => (
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Router>
-      <AppRoutes />
+      <Provider store={store}>
+        <AppRoutes />
+      </Provider>
     </Router>
   </StrictMode>
 );

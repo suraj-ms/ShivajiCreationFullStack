@@ -1,0 +1,36 @@
+.floating-input-container {
+  position: relative;
+  margin: 15px 10px;
+}
+
+.floating-label {
+  position: absolute;
+  top: 50%; /* Default position */
+  left: 10px;
+  transform: translateY(-50%); /* Centers the label vertically */
+  font-size: 16px; /* Default font size */
+  transition: 0.2s ease all; /* Smooth transition */
+  pointer-events: none; /* Prevents interaction with the label */
+  color: #aaa; /* Default color */
+}
+
+.floating-label.active {
+  top: -10px; /* Moves the label up */
+  font-size: 12px; /* Shrinks the label */
+  color: gray; /* Optional: Change label color when active */
+}
+
+.floating-input {
+  background-color: rgb(230, 230, 230);
+  width: 100%;
+  padding: 15px 10px; /* Add padding for text */
+  font-size: 16px; /* Matches the label font size */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none; /* Removes outline */
+  transition: 0.2s ease all; /* Smooth transition on focus */
+}
+
+.floating-input:focus {
+  border-color: white; /* Border color on focus */
+}

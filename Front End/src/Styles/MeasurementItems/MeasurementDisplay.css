@@ -1,0 +1,29 @@
+h3{
+    width: fit-content;
+    margin: 10px auto;
+}
+
+.measurement_display_container{
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.measurement_display_container .cust_basic_data{
+    display: flex;
+    justify-content: space-between;
+}
+
+.measurement_display_container .cust_basic_data .cust_data_items{
+    border: 1px solid black;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.measurement_values{
+    display: flex;
+    margin: 30px;
+    justify-content: space-between;
+}
