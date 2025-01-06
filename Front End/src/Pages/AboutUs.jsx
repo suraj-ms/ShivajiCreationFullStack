@@ -1,13 +1,13 @@
 import React from 'react';
 import Masonry from "react-masonry-css";
-import image1 from '../assets/gallary/image1.PNG';
-import image2 from '../assets/gallary/image2.PNG';
-import image3 from '../assets/gallary/image3.PNG';
-import image from '../assets/gallary/image.PNG';
-import image4 from '../assets/gallary/image4.PNG';
-import image5 from '../assets/gallary/image5.PNG';
-import image6 from '../assets/gallary/image6.PNG';
-import image7 from '../assets/gallary/image7.PNG';
+import image1 from '../assets/gallary/image1.png';
+import image2 from '../assets/gallary/image2.png';
+import image3 from '../assets/gallary/image3.png';
+import image8 from '../assets/gallary/image.png';
+import image4 from '../assets/gallary/image4.png';
+import image5 from '../assets/gallary/image5.png';
+import image6 from '../assets/gallary/image6.png';
+import image7 from '../assets/gallary/image7.png';
 import LoginFooter from './LoginFooter';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -20,7 +20,7 @@ const AboutUs = () => {
         image3,
         image4,
         image5,
-        image,
+        image8,
         image6,
         image7,
     ];
