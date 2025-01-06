@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import './Login.css';
 import config from '../../utils/config';
+import LoginFooter from '../../Pages/LoginFooter';
 
 const Login = () => {
   const [userName, setUserName] = useState('');
@@ -26,12 +27,12 @@ const Login = () => {
     }
 
     try {
-      
-      
+
+
       const response = await api.post('/login', { userName, password });
       localStorage.setItem('role', response.data.user.role);
       localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('loggedInUserName', response.data.user.userName); 
+      localStorage.setItem('loggedInUserName', response.data.user.userName);
       navigate('/');
     } catch (err) {
       console.log(err);
@@ -40,29 +41,32 @@ const Login = () => {
   };
 
   return (
-    <div className='login_page'>
-      <h1 className='app_title'>{config.appTitle}</h1>
-      <div className="login-container">
-        <p className='login_text'>Login</p>
-        <ion-icon name="person-circle-outline"></ion-icon>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {error && <div className="error">{error}</div>}
-          <button className='login_submit_btn' type="submit">Log in</button>
-          {/* <h4>Forgot Password</h4> tbd */}
-        </form>
+    <div className="login_page_container">
+      <div className='login_page'>
+        <h1 className='app_title'>{config.appTitle}</h1>
+        <div className="login-container">
+          <p className='login_text'>Login</p>
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Username"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {error && <div className="error">{error}</div>}
+            <button className='login_submit_btn' type="submit">Log in</button>
+            {/* <h4>Forgot Password</h4> tbd */}
+          </form>
+        </div>
       </div>
+      <LoginFooter />
     </div>
   );
 };

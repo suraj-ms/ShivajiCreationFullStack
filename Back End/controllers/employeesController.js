@@ -17,7 +17,7 @@ exports.createEmp = async (req, res) => {
 
     // Create a new Employee instance, setting _id to empid if provided
     const newEmployee = new Employee({
-      _id: empid, // Custom _id
+      _id: empid,
       empName,
       empNumber,
       empAadhaarNumber,

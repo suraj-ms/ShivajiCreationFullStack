@@ -13,6 +13,7 @@ import PrivateRoute from './Pages/PrivateRoute';
 
 import { Provider } from 'react-redux';
 import store from './utils/redux/Measurement/store.js';
+import AboutUs from './Pages/AboutUs.jsx';
 
 const AppRoutes = () => (
   <Routes>
@@ -22,6 +23,7 @@ const AppRoutes = () => (
       <Route path="/bill/:orderNumber" element={<PrivateRoute element={<Bill />} />} />
       <Route path="/admin" element={<PrivateRoute element={<AdminPanel />} />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/aboutus" element={<AboutUs />} />
       <Route path="/signup" element={<Signup />} />
     </Route>
   </Routes>

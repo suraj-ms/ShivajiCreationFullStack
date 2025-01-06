@@ -1,0 +1,42 @@
+.about_pg_header {
+    text-align: center;
+    padding: 30px;
+    color: var(--plesent-theme-war);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.about_pg_header h1 {
+
+    margin-bottom: 30px;
+}
+
+.about_pg_header_desc {
+
+}
+
+.masonry-grid {
+    display: flex;
+    padding: 10px;
+    width: 90%;
+    margin: 70px auto;
+    border-radius: 15px;
+    box-shadow: inset 0 0 300px rgba(25, 126, 173, 0.3);
+}
+
+.masonry-grid_column {
+    padding-left: 30px; /* gutter size */
+    background-clip: padding-box;
+}
+
+.masonry-item {
+    margin-bottom: 30px;
+}
+
+.masonry-img {
+    width: 100%;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

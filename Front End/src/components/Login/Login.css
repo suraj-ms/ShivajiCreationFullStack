@@ -1,5 +1,9 @@
-.login_page{
-  transform: translateY(50%);
+.login_page_container{
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: center;
+
 }
 
 .login-container {

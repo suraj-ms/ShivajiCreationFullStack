@@ -1,0 +1,17 @@
+.footer_container{
+    background-color: white;
+    width: 100%;
+    padding: 30px;
+    position: fixed;
+    bottom: 0;
+    color: rgb(161, 161, 161);
+    font-size: small;
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer_link{
+    font-size: small;
+    color: rgb(161, 161, 161);
+
+}
